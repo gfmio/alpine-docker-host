@@ -1,7 +1,7 @@
 set -exu
 
 adduser -s /bin/bash -D alpine
-echo "alpine:alpine/4u" | chpasswd
+echo "alpine:alpine" | chpasswd
 
 mkdir -pm 700 /home/alpine/.ssh
 
