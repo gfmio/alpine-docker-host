@@ -1,33 +1,34 @@
 #!/sbin/openrc-run
-supervisor=supervise-daemon
 
-name="Minikube Daemon"
-description="Persistent process that runs minikube"
-description_reload="Reload minikube"
+MINIKUBE_BINARY="${MINIKUBE_BINARY:-/usr/bin/minikube}"
 
-command="${MINIKUBE_BINARY:-/usr/bin/minikube}"
-command_args="${MINIKUBE_OPTS}"
-MINIKUBE_LOGFILE="${MINIKUBE_LOGFILE:-/var/log/${RC_SVCNAME}.log}"
-MINIKUBE_ERRFILE="${MINIKUBE_ERRFILE:-${MINIKUBE_LOGFILE}}"
-MINIKUBE_OUTFILE="${MINIKUBE_OUTFILE:-${MINIKUBE_LOGFILE}}"
-supervise_daemon_args="--stderr \"${MINIKUBE_ERRFILE}\" --stdout \"${MINIKUBE_OUTFILE}\""
-
-extra_started_commands="reload"
-
-rc_ulimit="${MINIKUBE_ULIMIT:--c unlimited -n 1048576 -u unlimited}"
-
-retry="${MINIKUBE_RETRY:-TERM/60/KILL/10}"
+name="$RC_SVCNAME"
+description="Runs minikube on startup"
 
 depend() {
-	need docker
+    need docker
+}
+start() {
+    ebegin "Starting $RC_SVCNAME"
+    su alpine -c "$MINIKUBE_BINARY start"
+    eend $?
 }
 
-start_pre() {
-	checkpath -f -m 0644 -o root:minikube "$MINIKUBE_ERRFILE" "$MINIKUBE_OUTFILE"
+stop() {
+    ebegin "Stopping $RC_SVCNAME"
+    su alpine -c "$MINIKUBE_BINARY stop"
+    eend $?
 }
 
-reload() {
-	ebegin "Reloading configuration"
-	$supervisor $RC_SVCNAME --signal HUP
-	eend $?
+status() {
+	local _retval
+    su alpine -c "$MINIKUBE_BINARY stop" > /dev/null
+    _retval=$?
+    if [ ${_retval} = '0' ]; then
+        einfo 'status: started'
+        return 0
+    else
+        einfo 'status: stopped' 
+        return 3
+    fi
 }
