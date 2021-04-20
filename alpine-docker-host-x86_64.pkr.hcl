@@ -5,7 +5,7 @@ variable "accelerator" {
 
 variable "disk_size" {
   type    = string
-  default = "12G"
+  default = "80G"
 }
 
 variable "output_directory" {
