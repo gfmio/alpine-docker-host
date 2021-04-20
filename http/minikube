@@ -1,0 +1,33 @@
+#!/sbin/openrc-run
+supervisor=supervise-daemon
+
+name="Minikube Daemon"
+description="Persistent process that runs minikube"
+description_reload="Reload minikube"
+
+command="${MINIKUBE_BINARY:-/usr/bin/minikube}"
+command_args="${MINIKUBE_OPTS}"
+MINIKUBE_LOGFILE="${MINIKUBE_LOGFILE:-/var/log/${RC_SVCNAME}.log}"
+MINIKUBE_ERRFILE="${MINIKUBE_ERRFILE:-${MINIKUBE_LOGFILE}}"
+MINIKUBE_OUTFILE="${MINIKUBE_OUTFILE:-${MINIKUBE_LOGFILE}}"
+supervise_daemon_args="--stderr \"${MINIKUBE_ERRFILE}\" --stdout \"${MINIKUBE_OUTFILE}\""
+
+extra_started_commands="reload"
+
+rc_ulimit="${MINIKUBE_ULIMIT:--c unlimited -n 1048576 -u unlimited}"
+
+retry="${MINIKUBE_RETRY:-TERM/60/KILL/10}"
+
+depend() {
+	need docker
+}
+
+start_pre() {
+	checkpath -f -m 0644 -o root:minikube "$MINIKUBE_ERRFILE" "$MINIKUBE_OUTFILE"
+}
+
+reload() {
+	ebegin "Reloading configuration"
+	$supervisor $RC_SVCNAME --signal HUP
+	eend $?
+}

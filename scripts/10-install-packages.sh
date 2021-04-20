@@ -8,5 +8,5 @@ apk update && apk upgrade --available
 # Install the packages
 apk add \
   busybox-extras \
-  docker kubernetes sudo bash curl
+  docker minikube kubectl sudo bash curl
 
